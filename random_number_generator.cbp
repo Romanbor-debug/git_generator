@@ -1,0 +1,121 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+
+static int base = 567; // база для генерации семени
+
+extern void change_base(int num){ // меняет базу
+    base = (base * num) + 123;
+}
+
+extern void seed_creation(char *key, int *seeds, int length){ //
+    for (int i = 0; i < length; i++){
+        seeds[i] = key[i];
+    }
+
+    for (int i = 1; i < length; i++){
+        seeds[i] = base * seeds[i - 1] + key[i];
+    }
+}
+
+extern void create_random(int *seeds, int *randoms, int length, int range_min, int range_max){
+    // заполняет массив randoms псевдослучайными числами
+    for (int i = 0; i < length; i++){
+        randoms[i] = seeds[i] * base;
+
+        if (randoms[i] < 0){
+            randoms[i] = randoms[i] * -1;
+        }
+
+        randoms[i] = randoms[i] % range_max;
+
+        if (randoms[i] < range_max - 9){
+            randoms[i] = randoms[i] + (i % 10);
+        }
+        else{
+            if (randoms[i] - 9 > range_min){
+                randoms[i] = randoms[i] - (i % 10);
+            }
+            else{
+                randoms[i] = randoms[i] + ((range_max - randoms[i]) % ((seeds[i] % (range_max - randoms[i])) + 1));
+            }
+        }
+    }
+
+    change_base(randoms[base % length]);
+}
+
+int main() {
+	int v = 0, *true_rand, *randoms, *seeds, length, range_min, range_max;
+	char *key;
+
+	scanf("%d", &length);
+	scanf("%d", &range_min);
+	scanf("%d", &range_max);
+
+
+	true_rand = (int*) malloc(10);
+
+	if (true_rand[2] < 0){
+	    true_rand[2] = true_rand[2] * -1;
+	}
+
+
+    //инициализация массива семян и ключа
+	key = (char*) malloc(length * sizeof(char));
+
+	seeds = (int*) malloc(length * sizeof(int));
+
+	randoms = (int*) malloc(length * sizeof(int));
+
+
+	//создание ключа
+	for (int i = 0; i < length; i++){
+	    v = (true_rand[2] +  973 * (i + 1)) % 125;
+	    if (v < 21){
+	        v = v + 21;
+	    }
+	    key[i] = v;
+	}
+
+    printf("Our entropy: %d\n", true_rand[2]);
+	printf("Our key: %s\n", key);
+
+	for (int i = 0; i < length; i++){
+        printf("%d\n", seeds[i]);
+	}
+
+	printf("\n");
+
+	printf("Iteration 1:\n");
+
+	change_base(length);
+	seed_creation(key, seeds, length);
+	create_random(seeds, randoms, length, range_min, range_max);
+
+	for (int i = 0; i < length; i++){
+	    printf("%d\n", randoms[i]);
+	}
+
+	printf("\n");
+
+	printf("Iteration 2:\n");
+
+	change_base(length);
+	seed_creation(key, seeds, length);
+	create_random(seeds, randoms, length, range_min, range_max);
+
+	for (int i = 0; i < length; i++){
+	    printf("%d\n", randoms[i]);
+	}
+
+
+    //освобождение памяти
+    free(true_rand);
+	free(key);
+	free(seeds);
+	free(randoms);
+
+}
